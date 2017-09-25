@@ -6,6 +6,35 @@ from random import randrange
 from Snake import Snake
 from Food import Food, FoodList
 
+class Dojo:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((640,480))
+        self.screen.fill((0,0,0))
+        self.snakes = []
+        for i in range(10):
+            self.snakes.append(Snake(320, 240, (255, 9, 0), self.screen))
+        self.food_list = FoodList(self.screen)
+    
+    def check_one_snake_collision(self, snake):
+        if snake.check_no_health():
+            return True
+        self.food_list.collide_snake(snake)
+        return False
+    
+    def check_all_snakes_collisions(self):
+        for i, snake in enumerate(self.snakes):
+            if self.check_one_snake_collision(snake):
+                self.snakes[i] = Snake(320, 240, (255, 0, 0), self.screen)
+
+    def game_loop(self):
+        while 1:
+            self.screen.fill((0,0,0))
+            for snake in self.snakes:
+                snake.move()
+            self.check_all_snakes_collisions()
+            self.food_list.draw()
+
 KEYS = {'left': 0, 'right': 0}
 
 def handle_key_press(snake):
