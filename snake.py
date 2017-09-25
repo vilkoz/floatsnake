@@ -12,16 +12,16 @@ class Dojo:
         self.screen = pygame.display.set_mode((640,480))
         self.screen.fill((0,0,0))
         self.snakes = []
-        for i in range(1):
+        for i in range(10):
             self.snakes.append(Snake(320, 240, (255, 9, 0), self.screen))
         self.food_list = FoodList(self.screen)
-    
+
     def check_one_snake_collision(self, snake):
         if snake.check_no_health():
             return True
         self.food_list.collide_snake(snake)
         return False
-    
+
     def check_all_snakes_collisions(self):
         for i, snake in enumerate(self.snakes):
             if self.check_one_snake_collision(snake):
@@ -47,7 +47,7 @@ class Dojo:
 
     def game_loop(self):
         while 1:
-            print('game_loop')
+            self.screen = pygame.display.set_mode((640,480))
             self.screen.fill((0,0,0))
             for snake in self.snakes:
                 snake.move()
@@ -78,17 +78,8 @@ def handle_key_press(snake):
         snake.rotate('right')
 
 def main():
-    #dojo = Dojo()
-
-    #dojo.game_loop()
-    pygame.init()
-    print("start")
-    screen = pygame.display.set_mode((640, 480))
-    screen.fill((0,0,0))
-    while 1:
-        screen.fill((0,0,0))
-        pygame.draw.circle(screen, (255,0,0), (50, 50), 10, 0)
-        pygame.display.update()
+    dojo = Dojo()
+    dojo.game_loop()
 
 if __name__ == "__main__":
     main()

@@ -19,7 +19,7 @@ class Snake():
         self.screen = screen
         rand_x = randrange(-100, 100) / 100
         rand_y = randrange(-100, 100) / 100
-        self.dir = [rand_y, rand_x]
+        self.dir = normalize([rand_y, rand_x])
         self.chains = [[y0, x0]]
         self.points = 0
         for i in range(3):
