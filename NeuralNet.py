@@ -5,10 +5,13 @@ def sigmoid(x):
 
 class NeuralNet:
 
-    def __init__(self):
+    def __init__(self, coefs):
         self.sizes ={'X': 48, 'l1': 16, 'l2': 16, 'Y' : 2}
         self.coefs = [None] * 4
-        self.random_init()
+        if coefs:
+            self.unroll(coefs)
+        else:
+            self.random_init()
 
     def random_init(self):
         self.coefs[0] = np.random.random_sample((self.sizes['X'], 1)) - 0.5

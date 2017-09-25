@@ -12,7 +12,7 @@ class Dojo:
         self.screen = pygame.display.set_mode((640,480))
         self.screen.fill((0,0,0))
         self.snakes = []
-        for i in range(10):
+        for i in range(1):
             self.snakes.append(Snake(320, 240, (255, 9, 0), self.screen))
         self.food_list = FoodList(self.screen)
     
@@ -27,13 +27,33 @@ class Dojo:
             if self.check_one_snake_collision(snake):
                 self.snakes[i] = Snake(320, 240, (255, 0, 0), self.screen)
 
+    def get_two_best_snakes(self):
+        max_points = 0
+        best_snake = None
+        for snake in self.snakes:
+            if snake.points > max_points:
+                max_points = snake.points
+                best_snake = snake
+        max_points = 0
+        second_best_snake = None
+        for snake in self.snakes:
+            if snake.points > max_points:
+                max_points = snake.points
+                second_best_snake = snake
+        return (best_snake, second_best_snake)
+
+    def new_best_snake(self):
+        best_snakes = self.get_two_best_snakes()
+
     def game_loop(self):
         while 1:
+            print('game_loop')
             self.screen.fill((0,0,0))
             for snake in self.snakes:
                 snake.move()
             self.check_all_snakes_collisions()
             self.food_list.draw()
+            pygame.display.update()
 
 KEYS = {'left': 0, 'right': 0}
 
@@ -57,25 +77,17 @@ def handle_key_press(snake):
     if KEYS['right']:
         snake.rotate('right')
 
-def check_collisions(snake, food_list):
-    if snake.check_no_health():
-        return True
-    food_list.collide_snake(snake)
-    return False
-
 def main():
+    #dojo = Dojo()
+
+    #dojo.game_loop()
     pygame.init()
-    screen = pygame.display.set_mode((640,480))
+    print("start")
+    screen = pygame.display.set_mode((640, 480))
     screen.fill((0,0,0))
-    snake = Snake(320, 240, (255, 0, 0), screen)
-    food_list = FoodList(screen)
     while 1:
         screen.fill((0,0,0))
-        snake.move()
-        handle_key_press(snake)
-        if check_collisions(snake, food_list):
-            snake = Snake(320, 240, (255, 0, 0), screen)
-        food_list.draw()
+        pygame.draw.circle(screen, (255,0,0), (50, 50), 10, 0)
         pygame.display.update()
 
 if __name__ == "__main__":
