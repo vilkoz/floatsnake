@@ -141,7 +141,8 @@ class Snake():
             else:
                 p = p1
             dist = distance(p, self.chains[0])
-            if ray_cmp([x1 - x2 for x1, x2 in zip(p, self.chains[0])], ray) and dist < min_dist:
+            # if ray_cmp([x1 - x2 for x1, x2 in zip(p, self.chains[0])], ray) and dist < min_dist:
+            if dist < min_dist:
                 min_dist = dist
         return min_dist
 

@@ -2,6 +2,7 @@
 import sys
 import pygame
 import numpy as np
+import struct
 from math import cos, sin, pi, sqrt
 from random import randrange
 from Snake import Snake
@@ -38,14 +39,27 @@ class Dojo:
         max_points = 0
         second_best_snake = None
         for snake in self.snakes:
-            if snake.points > max_points:
+            if snake != best_snake and snake.points > max_points:
                 max_points = snake.points
                 second_best_snake = snake
         return (best_snake, second_best_snake)
 
+    def mutate(self, snake):
+        genes = snake.nn.roll()
+        mutation_possibility = 2 / snake.points
+        for gene_i, gene in enumerate(genes):
+            byte_string = struct.pack('f', gene)
+            byte_list = list(byte_string)
+            for i, byte in enumerate(byte_list):
+                for j in range(8):
+                    if randrange(0, 100000) / 100000 < mutation_possibility:                       byte &= (1 << j)
+                byte_list[i] = byte
+            genes[gene_i] = struct.unpack('f', bytes(byte_list))
+        return genes
+
     def merge_gens(self, snake1, snake2):
-        c1 = snake1.nn.roll()
-        c2 = snake2.nn.roll()
+        c1 = self.mutate(snake1)
+        c2 = self.mutate(snake2)
         parents = (c1, c2) 
         random_places = [randrange(0, len(c1)) for i in range(12)]
         last_i = 0
@@ -69,8 +83,12 @@ class Dojo:
     def move_snakes(self):
         for snake in self.snakes:
             X = np.array(snake.gen_inputs(self.food_list))
+            X = X / 10000 - 0.5
+            # if snake == self.snakes[0]:
+            #     print('food', X[:16])
+            #     print('gopa', X[16:32])
+            #     print('walls', X[32:])
             Y = snake.nn.get_output(X)
-            #print(Y, Y[0] > Y[1])
             Y = [x / max(Y) for x in Y]
             snake.rotate("left" if Y[0] > Y[1] else "right")
             snake.move()
