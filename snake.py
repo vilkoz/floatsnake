@@ -46,7 +46,7 @@ class Dojo:
 
     def mutate(self, snake):
         genes = snake.nn.roll()
-        mutation_possibility = 2 / snake.points
+        mutation_possibility = 200 / snake.points
         for gene_i, gene in enumerate(genes):
             byte_string = struct.pack('f', gene)
             byte_list = list(byte_string)
@@ -84,13 +84,18 @@ class Dojo:
         for snake in self.snakes:
             X = np.array(snake.gen_inputs(self.food_list))
             X = X / 10000 - 0.5
-            # if snake == self.snakes[0]:
-            #     print('food', X[:16])
-            #     print('gopa', X[16:32])
-            #     print('walls', X[32:])
+            if snake == self.snakes[0]:
+                print('inputs', X)
+                print('food', X[:16])
+                print('gopa', X[16:32])
+                print('walls', X[32:])
             Y = snake.nn.get_output(X)
             Y = [x / max(Y) for x in Y]
-            snake.rotate("left" if Y[0] > Y[1] else "right")
+            if snake == self.snakes[0]:
+                print("left" if Y[0] > Y[1] else "right")
+                print(Y)
+            angle = (Y[0] - Y[1]) * 90
+            snake.rotate(angle)
             snake.move()
 
     def game_loop(self):

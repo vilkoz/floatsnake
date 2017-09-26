@@ -60,13 +60,23 @@ class NeuralNet:
                 self.coefs[3][i][j] = array[idx]
                 idx += 1
 
-if __name__ == "__main__":
+def test_roll_unroll():
     X0 = np.array([1] * 48 + [2] * 16 * 48 + [3] * 16 * 16 + [4] * 2 * 16)
     X = np.array([1] * 24 + [0] * 24)
     net = NeuralNet(X0)
     a = net.roll()
+    print (a)
     print (a.count(1))
     print (a.count(2))
     print (a.count(3))
     print (a.count(4))
     print (net.get_output(X))
+
+if __name__ == "__main__":
+    #test_roll_unroll()
+    X = np.array([1] * 24 + [-1] * 24)
+    X = [0.5] * 32 + [-0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078,
+                      -0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078, -0.49170078]
+    for i in range(100):
+        net = NeuralNet()
+        print(net.get_output(X))

@@ -65,11 +65,12 @@ class Snake():
         self.health = 100
         self.points += 100
 
-    def rotate(self, text):
-        if text == "left":
-            b = ((self.rot_speed) / 180) * pi
-        elif text == "right":
-            b = ((-self.rot_speed) / 180) * pi
+    def rotate(self, angle):
+        # if text == "left":
+        #     b = ((self.rot_speed) / 180) * pi
+        # elif text == "right":
+        #     b = ((-self.rot_speed) / 180) * pi
+        b = ((angle) / 180) * pi
         self.dir = self.rotate_ray(self.dir, b)
         self.dir = normalize(self.dir)
 

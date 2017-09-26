@@ -28,9 +28,9 @@ class FoodList():
 
     def collide_snake(self, snake):
         for pear in self.list:
-            for node in snake.chains:
-                if distance(node, pear.pos) < 10:
-                    if pear in self.list:
-                        self.list.remove(pear)
-                        self.add_pear()
-                        snake.grow()
+            # for node in snake.chains:
+            if distance(snake.chains[0], pear.pos) < 10:
+                if pear in self.list:
+                    self.list.remove(pear)
+                    self.add_pear()
+                    snake.grow()
