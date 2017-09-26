@@ -16,7 +16,7 @@ class FoodList():
     def __init__(self, screen):
         self.screen = screen
         self.list = []
-        for i in range(10):
+        for i in range(100):
             self.add_pear()
 
     def draw(self):
@@ -30,6 +30,7 @@ class FoodList():
         for pear in self.list:
             for node in snake.chains:
                 if distance(node, pear.pos) < 10:
-                    self.list.remove(pear)
-                    self.add_pear()
-                    snake.grow()
+                    if pear in self.list:
+                        self.list.remove(pear)
+                        self.add_pear()
+                        snake.grow()

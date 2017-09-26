@@ -1,6 +1,7 @@
 #!./snake/bin/python
 import sys
 import pygame
+import numpy as np
 from math import cos, sin, pi, sqrt
 from random import randrange
 from Snake import Snake
@@ -25,7 +26,7 @@ class Dojo:
     def check_all_snakes_collisions(self):
         for i, snake in enumerate(self.snakes):
             if self.check_one_snake_collision(snake):
-                self.snakes[i] = Snake(320, 240, (255, 0, 0), self.screen)
+                self.snakes[i] = self.new_best_snake()
 
     def get_two_best_snakes(self):
         max_points = 0
@@ -42,15 +43,42 @@ class Dojo:
                 second_best_snake = snake
         return (best_snake, second_best_snake)
 
+    def merge_gens(self, snake1, snake2):
+        c1 = snake1.nn.roll()
+        c2 = snake2.nn.roll()
+        parents = (c1, c2) 
+        random_places = [randrange(0, len(c1)) for i in range(12)]
+        last_i = 0
+        res = []
+        cur_parent = 0
+        for j in range(len(random_places)):
+            for i in range(last_i, random_places[j]):
+                res.append(parents[cur_parent][i])
+                last_i = i
+            cur_parent ^= 1
+        for i in range(len(c1)):
+            res.append(parents[cur_parent][i])
+        return res
+
     def new_best_snake(self):
-        best_snakes = self.get_two_best_snakes()
+        parents = self.get_two_best_snakes()
+        print(parents[0].points, parents[1].points)
+        new_gene = self.merge_gens(parents[0], parents[1])
+        return Snake(randrange(320 - 200, 320 + 200), randrange(240 - 100, 240 + 100), (0, 0, 255), self.screen, new_gene)
+
+    def move_snakes(self):
+        for snake in self.snakes:
+            X = np.array(snake.gen_inputs(self.food_list))
+            Y = snake.nn.get_output(X)
+            #print(Y, Y[0] > Y[1])
+            Y = [x / max(Y) for x in Y]
+            snake.rotate("left" if Y[0] > Y[1] else "right")
+            snake.move()
 
     def game_loop(self):
         while 1:
-            self.screen = pygame.display.set_mode((640,480))
             self.screen.fill((0,0,0))
-            for snake in self.snakes:
-                snake.move()
+            self.move_snakes()
             self.check_all_snakes_collisions()
             self.food_list.draw()
             pygame.display.update()
