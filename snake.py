@@ -11,12 +11,14 @@ from Food import Food, FoodList
 class Dojo:
     def __init__(self):
         pygame.init()
+        self.font = pygame.font.SysFont("monospace", 15)
         self.screen = pygame.display.set_mode((640,480))
         self.screen.fill((0,0,0))
         self.snakes = []
         for i in range(10):
             self.snakes.append(Snake(320, 240, (255, 9, 0), self.screen))
         self.food_list = FoodList(self.screen)
+        self.mutation_possibility = 2 / 800
 
     def check_one_snake_collision(self, snake):
         if snake.check_no_health():
@@ -42,24 +44,38 @@ class Dojo:
             if snake != best_snake and snake.points > max_points:
                 max_points = snake.points
                 second_best_snake = snake
+        self.mutation_possibility = 2 / best_snake.points
         return (best_snake, second_best_snake)
 
     def mutate(self, snake):
         genes = snake.nn.roll()
-        mutation_possibility = 2 / snake.points
         for gene_i, gene in enumerate(genes):
             byte_string = struct.pack('f', gene)
             byte_list = list(byte_string)
             for i, byte in enumerate(byte_list):
                 for j in range(8):
-                    if randrange(0, 100000) / 100000 < mutation_possibility:                       byte &= (1 << j)
+                    if randrange(0, 100000) / 100000 < self.mutation_possibility:
+                        byte ^= (1 << j)
                 byte_list[i] = byte
             genes[gene_i] = struct.unpack('f', bytes(byte_list))
         return genes
 
+    def mutate_byte(self, byte):
+        byte_list = list(struct.pack('f', byte))
+        ret_list = byte_list.copy()
+        j = 0
+        for b in byte_list:
+            for i in range(8):
+                if randrange(0, 131072) / 131072 < self.mutation_possibility:
+                    ret_list[j] ^= (1 << i)
+            j += 1
+        return struct.unpack('f', bytes(ret_list))
+
     def merge_gens(self, snake1, snake2):
-        c1 = self.mutate(snake1)
-        c2 = self.mutate(snake2)
+        # c1 = self.mutate(snake1)
+        # c2 = self.mutate(snake2)
+        c1 = snake1.nn.roll()
+        c2 = snake2.nn.roll()
         parents = (c1, c2) 
         random_places = [randrange(0, len(c1)) for i in range(12)]
         last_i = 0
@@ -67,7 +83,8 @@ class Dojo:
         cur_parent = 0
         for j in range(len(random_places)):
             for i in range(last_i, random_places[j]):
-                res.append(parents[cur_parent][i])
+                byte = self.mutate_byte(parents[cur_parent][i])
+                res.append(byte)
                 last_i = i
             cur_parent ^= 1
         for i in range(len(c1)):
@@ -90,13 +107,17 @@ class Dojo:
                 print('gopa', X[16:32])
                 print('walls', X[32:])
             Y = snake.nn.get_output(X)
-            Y = [x / max(Y) for x in Y]
+            #Y = [x / max(Y) for x in Y]
             if snake == self.snakes[0]:
-                print("left" if Y[0] > Y[1] else "right")
                 print(Y)
-            angle = (Y[0] - Y[1]) * 45
+            # angle = (Y[0] - Y[1]) * 45
+            angle = snake.get_rotation_angle(Y)
             snake.rotate(angle)
             snake.move()
+
+    def display_info(self):
+        label = self.font.render("Mutation pos: " + str(self.mutation_possibility), 1, (255,255,255))
+        self.screen.blit(label, (10, 10))
 
     def game_loop(self):
         while 1:
@@ -104,6 +125,7 @@ class Dojo:
             self.move_snakes()
             self.check_all_snakes_collisions()
             self.food_list.draw()
+            self.display_info()
             pygame.display.update()
 
 KEYS = {'left': 0, 'right': 0}

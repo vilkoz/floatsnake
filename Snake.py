@@ -1,13 +1,16 @@
 import sys
 import pygame
 import numpy as np
-from math import cos, sin, pi, sqrt
+from math import cos, sin, pi, sqrt, atan2
 from random import randrange
 from NeuralNet import NeuralNet
 
 def normalize(vector):
     size = sqrt(vector[0]**2 + vector[1]**2)
-    return [x / size for x in vector]
+    if size != 0:
+        return [x / size for x in vector]
+    else:
+        return vector
 
 def distance(node1, node2):
     return sqrt(sum([(x1 - x2) ** 2 for x1, x2 in zip(node1, node2)]))
@@ -15,13 +18,8 @@ def distance(node1, node2):
 def sign(num):
     return -1 if num < 0 else 1
 
-def ray_cmp(v1, v2):
-    v1 = normalize(v1)
-    v2 = normalize(v2)
-    for x1, x2 in zip(v1, v2):
-        if abs((x1) - (x2)) >= 0.00001:
-            return False
-    return True
+def mean(numbers):
+    return float(sum(numbers)) / max(len(numbers), 1)
 
 class Snake():
     def __init__(self, y0, x0, color, screen, net_coefs=None):
@@ -38,6 +36,9 @@ class Snake():
         self.rot_speed = 5
         self.health = 100
         self.nn = NeuralNet(net_coefs)
+        self.values = []
+        self.mean = None
+        self.amp = None
 
     def draw(self):
         for node in self.chains:
@@ -57,6 +58,7 @@ class Snake():
             prev = node
         self.health -= 1
         self.points += 5
+        self.dir = normalize(self.dir)
         self.draw()
 
     def grow(self):
@@ -72,7 +74,7 @@ class Snake():
         #     b = ((-self.rot_speed) / 180) * pi
         b = ((angle) / 180) * pi
         self.dir = self.rotate_ray(self.dir, b)
-        self.dir = normalize(self.dir)
+        #self.dir = normalize(self.dir)
 
     def check_no_health(self):
         pos = self.chains[0]
@@ -132,6 +134,7 @@ class Snake():
         return min_dist
 
     def intersect_circle_array(self, array, radius, ray, ray_start):
+        "deprecated"
         min_dist = 10000
         for circle in array:
             points = self.intersect_circle(ray_start, ray, circle, radius)
@@ -148,21 +151,65 @@ class Snake():
                 min_dist = dist
         return min_dist
 
+    def calc_angle(self, ray):
+        r1 = self.dir
+        r2 = normalize(ray)
+        dot = r1[1] * r2[1] + r1[0] * r2[0]
+        det = r1[1] * r2[0] - r1[0] * r2[1]
+        angle = atan2(det, dot)
+        return (angle / (2 * pi)) * 360
+
+    def calc_objects_distances(self, array):
+        dist_array = [10000] * 16
+        FOV = 120
+        for circle in array:
+            try:
+                ray = [x1 - x2 for x1, x2 in zip(circle, self.chains[0])]
+            except Exception:
+                print(circle)
+                ray = [x1 - x2 for x1, x2 in zip(circle, self.chains[0])]
+            angle = self.calc_angle(ray)
+            if angle > -FOV and angle < FOV:
+                dist = distance(self.chains[0], circle)
+                index = int((angle + FOV) / 16)
+                if dist < dist_array[index]:
+                    dist_array[index] = dist
+        return dist_array
+
     def gen_inputs(self, food_list):
         rays = []
         for angle in range(-120, 120, 15):
             angle = (angle / 180) * pi
             rays.append(self.rotate_ray(self.dir, angle))
-        dist_pear = []
-        dist_gopa = []
+        dist_pear = self.calc_objects_distances([x.pos for x in food_list.list])
+        dist_gopa = self.calc_objects_distances(self.chains[1:])
         dist_wall = []
         walls = [[[0,0],[480, 0]],
                 [[0,0],[0, 640]],
                 [[0,640],[480, 640]],
                 [[480,0],[480, 640]]]
         for ray in rays:
-            dist_pear.append(self.intersect_circle_array(food_list.list, 5, ray, self.chains[0]))
-            dist_gopa.append(self.intersect_circle_array(self.chains[1:], 10, ray, self.chains[0]))
+            # dist_pear.append(self.intersect_circle_array(food_list.list, 5, ray, self.chains[0]))
+            # dist_gopa.append(self.intersect_circle_array(self.chains[1:], 10, ray, self.chains[0]))
             dist_wall.append(self.intersect_line_array(walls, self.chains[0], ray))
-        return dist_pear + dist_gopa + dist_wall
+        return [-x + 10000 for x in dist_pear] + dist_gopa + dist_wall
+
+    def get_rotation_angle(self, Y):
+        if len(self.values) < 10:
+            self.values.append(Y)
+            return (min(Y) * 60) - 30
+        elif self.mean == None:
+            v = []
+            v.append([x[0] for x in self.values])
+            v.append([x[1] for x in self.values])
+            self.mean = []
+            self.mean.append(mean(v[0]))
+            self.mean.append(mean(v[1]))
+            self.amp = []
+            self.amp.append(max(v[0]) - self.mean[0])
+            self.amp.append(max(v[1]) - self.mean[1])
+        angle = []
+        angle.append(((self.mean[0] - Y[0]) / self.amp[0]) * 90)
+        angle.append(((self.mean[1] - Y[1]) / self.amp[1]) * 90)
+        return ((angle[0] - angle[1]) / 90) * 15
 
