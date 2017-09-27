@@ -46,7 +46,7 @@ class Dojo:
 
     def mutate(self, snake):
         genes = snake.nn.roll()
-        mutation_possibility = 200 / snake.points
+        mutation_possibility = 2 / snake.points
         for gene_i, gene in enumerate(genes):
             byte_string = struct.pack('f', gene)
             byte_list = list(byte_string)
@@ -94,7 +94,7 @@ class Dojo:
             if snake == self.snakes[0]:
                 print("left" if Y[0] > Y[1] else "right")
                 print(Y)
-            angle = (Y[0] - Y[1]) * 90
+            angle = (Y[0] - Y[1]) * 45
             snake.rotate(angle)
             snake.move()
 

@@ -112,7 +112,7 @@ class Snake():
         p2 = np.array(p2, dtype=np.float)
         v1 = ray_start - p1
         v2 = p2 - p1
-        v3 = np.array([-ray_dir[0], ray_dir[1]])
+        v3 = np.array([-ray_dir[1], ray_dir[0]])
         t1 = np.cross(v2, v1) / np.dot(v2, v3)
         t2 = np.dot(v1, v3) / np.dot(v2, v3)
         if t1 >= 0.0 and t2 >= 0.0 and t2 <= 1.0:
@@ -126,8 +126,9 @@ class Snake():
             point = self.intersect_line(ray_start, ray_dir, line[1], line[0])
             if point == None:
                 continue
-            if distance(point, ray_start) < min_dist:
-                min_dist = distance(point, ray_start)
+            dist = distance(point, ray_start)
+            if dist < min_dist:
+                min_dist = dist
         return min_dist
 
     def intersect_circle_array(self, array, radius, ray, ray_start):
@@ -162,6 +163,6 @@ class Snake():
         for ray in rays:
             dist_pear.append(self.intersect_circle_array(food_list.list, 5, ray, self.chains[0]))
             dist_gopa.append(self.intersect_circle_array(self.chains[1:], 10, ray, self.chains[0]))
-            dist_wall.append(self.intersect_line_array(walls, self.chains[0], self.dir))
+            dist_wall.append(self.intersect_line_array(walls, self.chains[0], ray))
         return dist_pear + dist_gopa + dist_wall
 

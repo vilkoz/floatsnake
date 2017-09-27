@@ -16,7 +16,7 @@ class FoodList():
     def __init__(self, screen):
         self.screen = screen
         self.list = []
-        for i in range(10):
+        for i in range(100):
             self.add_pear()
 
     def draw(self):
