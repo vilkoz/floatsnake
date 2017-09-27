@@ -40,9 +40,11 @@ class Snake():
         self.mean = None
         self.amp = None
 
-    def draw(self):
+    def draw(self, color=None):
+        tmp_color = color if color else self.color
         for node in self.chains:
-            pygame.draw.circle(self.screen, self.color, (int(node[1]), int(node[0])), 10, 0)
+            pygame.draw.circle(self.screen, tmp_color, (int(node[1]), int(node[0])), 10, 0)
+            tmp_color = tuple([(x + 10) if x < 245 else x for x in tmp_color])
 
     def move(self):
         prev = None
@@ -58,13 +60,13 @@ class Snake():
             prev = node
         self.health -= 1
         self.points += 5
-        self.dir = normalize(self.dir)
-        self.draw()
+        # self.dir = normalize(self.dir)
+        #self.draw()
 
     def grow(self):
         last = self.chains[-1]
         self.chains.append([x1 - x2 for x1,x2 in zip(last, [x * 20 for x in self.dir])])
-        self.health = 100
+        self.health = 100 + 10 * (len(self.chains) - 4)
         self.points += 100
 
     def rotate(self, angle):
@@ -74,7 +76,7 @@ class Snake():
         #     b = ((-self.rot_speed) / 180) * pi
         b = ((angle) / 180) * pi
         self.dir = self.rotate_ray(self.dir, b)
-        #self.dir = normalize(self.dir)
+        self.dir = normalize(self.dir)
 
     def check_no_health(self):
         pos = self.chains[0]
@@ -161,13 +163,9 @@ class Snake():
 
     def calc_objects_distances(self, array):
         dist_array = [10000] * 16
-        FOV = 120
+        FOV = 90
         for circle in array:
-            try:
-                ray = [x1 - x2 for x1, x2 in zip(circle, self.chains[0])]
-            except Exception:
-                print(circle)
-                ray = [x1 - x2 for x1, x2 in zip(circle, self.chains[0])]
+            ray = [x1 - x2 for x1, x2 in zip(circle, self.chains[0])]
             angle = self.calc_angle(ray)
             if angle > -FOV and angle < FOV:
                 dist = distance(self.chains[0], circle)
@@ -189,8 +187,6 @@ class Snake():
                 [[0,640],[480, 640]],
                 [[480,0],[480, 640]]]
         for ray in rays:
-            # dist_pear.append(self.intersect_circle_array(food_list.list, 5, ray, self.chains[0]))
-            # dist_gopa.append(self.intersect_circle_array(self.chains[1:], 10, ray, self.chains[0]))
             dist_wall.append(self.intersect_line_array(walls, self.chains[0], ray))
         return [-x + 10000 for x in dist_pear] + dist_gopa + dist_wall
 
