@@ -56,7 +56,7 @@ class Dojo:
             if snake != best_snake and snake.points > max_points:
                 max_points = snake.points
                 second_best_snake = snake
-        self.mutation_possibility = 10 / (best_snake.points)
+        self.mutation_possibility = 1 / (best_snake.points)
         if self.the_best == None or self.the_best.points < best_snake.points:
             self.the_best = best_snake
         else:
@@ -142,7 +142,6 @@ class Dojo:
             self.food_list.draw()
             self.display_info()
             pygame.display.update()
-            break
 
 KEYS = {'left': 0, 'right': 0}
 
@@ -167,9 +166,8 @@ def handle_key_press(snake):
         snake.rotate('right')
 
 def main():
-    import profile
     dojo = Dojo()
-    profile.run("Dojo().game_loop()")
+    dojo.game_loop()
 
 if __name__ == "__main__":
     main()
