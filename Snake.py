@@ -53,13 +53,15 @@ class Snake():
                 node[0] += self.speed * self.dir[0]
                 node[1] += self.speed * self.dir[1]
             else:
-                if distance(prev, node) > 20:
+                dist = distance(node, prev)
+                if dist > 20:
+                    node_speed = dist - 20
                     direction = normalize([x1 - x2 for x1, x2 in zip(prev, node)])
-                    node[0] += self.speed * direction[0]
-                    node[1] += self.speed * direction[1]
+                    node[0] += node_speed * direction[0]
+                    node[1] += node_speed * direction[1]
             prev = node
         self.health -= 1
-        self.points += 5
+        self.points += 0.1
         # self.dir = normalize(self.dir)
         #self.draw()
 
@@ -67,7 +69,7 @@ class Snake():
         last = self.chains[-1]
         self.chains.append([x1 - x2 for x1,x2 in zip(last, [x * 20 for x in self.dir])])
         self.health = 100 + 10 * (len(self.chains) - 4)
-        self.points += 100
+        self.points += 1
 
     def rotate(self, angle):
         # if text == "left":

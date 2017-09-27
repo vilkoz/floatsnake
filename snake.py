@@ -18,7 +18,7 @@ class Dojo:
         for i in range(10):
             self.snakes.append(Snake(320, 240, (255, 9, 0), self.screen))
         self.food_list = FoodList(self.screen)
-        self.mutation_possibility = 2 / 800
+        self.mutation_possibility = 1 / 800
         self.the_best = None
         self.second_best = None
         self.cur_best = None
@@ -56,28 +56,16 @@ class Dojo:
             if snake != best_snake and snake.points > max_points:
                 max_points = snake.points
                 second_best_snake = snake
-        self.mutation_possibility = 2 / best_snake.points
+        self.mutation_possibility = 10 / (best_snake.points)
         if self.the_best == None or self.the_best.points < best_snake.points:
             self.the_best = best_snake
         else:
             second_best_snake = best_snake
         if self.second_best == None or self.second_best.points < self.second_best.points:
-            self.second_best = second_best_snake
+            if second_best_snake != self.the_best:
+                self.second_best = second_best_snake
         #return (self.the_best, second_best_snake)
         return (self.the_best, self.second_best)
-
-    def mutate(self, snake):
-        genes = snake.nn.roll()
-        for gene_i, gene in enumerate(genes):
-            byte_string = struct.pack('f', gene)
-            byte_list = list(byte_string)
-            for i, byte in enumerate(byte_list):
-                for j in range(8):
-                    if randrange(0, 100000) / 100000 < self.mutation_possibility:
-                        byte ^= (1 << j)
-                byte_list[i] = byte
-            genes[gene_i] = struct.unpack('f', bytes(byte_list))
-        return genes
 
     def mutate_byte(self, byte):
         byte_list = list(struct.pack('f', byte))
@@ -154,6 +142,7 @@ class Dojo:
             self.food_list.draw()
             self.display_info()
             pygame.display.update()
+            break
 
 KEYS = {'left': 0, 'right': 0}
 
@@ -178,8 +167,9 @@ def handle_key_press(snake):
         snake.rotate('right')
 
 def main():
+    import profile
     dojo = Dojo()
-    dojo.game_loop()
+    profile.run("Dojo().game_loop()")
 
 if __name__ == "__main__":
     main()
