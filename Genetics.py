@@ -1,5 +1,6 @@
 #!./snake/bin/python
 import struct
+from os import path
 from random import randrange
 from Snake import Snake
 
@@ -9,6 +10,9 @@ class Genetics:
         self.snakes = dojo.snakes
         self.screen = dojo.screen
         self.the_best = None
+        self.absolute_best_score = None
+        self.absolute_best_coefs = None
+        self.load_best_coefs()
         self.second_best = None
         self.cur_best = None
         self.mutation_possibility = 2 / 800
@@ -66,10 +70,34 @@ class Genetics:
 
     def new_best_snake(self):
         parents = self.get_two_best_snakes()
+        if parents[0].points > self.absolute_best_score:
+            self.save_best_coefs(parents[0])
         new_gene = self.merge_gens(parents[0], parents[1])
         return Snake(randrange(320 - 200, 320 + 200), randrange(240 - 100, 240 + 100), (255, 0, 0), self.screen, new_gene)
 
     def update_current_best(self):
         self.cur_best = [x for x in self.snakes if x.points == max([x.points for x in self.snakes])]
         self.cur_best = self.cur_best[0]
+
+    def load_best_coefs(self):
+        if path.isfile('scores.txt'):
+            with open('scores.txt') as f:
+                m = 0
+                m_coefs = []
+                for line in f:
+                    d = eval(line)
+                    if d['points'] > m:
+                        m = d['points']
+                        m_coefs = d['coefs']
+            self.absolute_best_score = m
+            self.absolute_best_coefs = m_coefs
+
+    def evole_from_file(self):
+        self.load_best_coefs()
+        if self.absolute_best_coefs:
+            self.the_best = Snake(320, 240, (255, 0, 0), self.screen, self.absolute_best_coefs)
+
+    def save_best_coefs(self, snake):
+        with open('scores.txt', 'w') as f:
+            f.write(str({'points': snake.points, 'coefs': snake.nn.roll()}) + '\n')
 

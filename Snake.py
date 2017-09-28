@@ -40,11 +40,12 @@ class Snake():
         self.mean = None
         self.amp = None
 
-    def draw(self, color=None):
+    def draw(self, color=None, gradient=True):
         tmp_color = color if color else self.color
         for node in self.chains:
             pygame.draw.circle(self.screen, tmp_color, (int(node[1]), int(node[0])), 10, 0)
-            tmp_color = tuple([(x + 10) if x < 245 else x for x in tmp_color])
+            if gradient:
+                tmp_color = tuple([(x + 10) if x < 245 else x for x in tmp_color])
 
     def move(self):
         prev = None
@@ -60,10 +61,8 @@ class Snake():
                     node[0] += node_speed * direction[0]
                     node[1] += node_speed * direction[1]
             prev = node
-        self.health -= 1
-        self.points += 0.1
-        # self.dir = normalize(self.dir)
-        #self.draw()
+        self.health -= self.speed / 5
+        self.points += (self.speed / 5) * 0.1
 
     def grow(self):
         last = self.chains[-1]
@@ -72,10 +71,6 @@ class Snake():
         self.points += 1
 
     def rotate(self, angle):
-        # if text == "left":
-        #     b = ((self.rot_speed) / 180) * pi
-        # elif text == "right":
-        #     b = ((-self.rot_speed) / 180) * pi
         b = ((angle) / 180) * pi
         self.dir = self.rotate_ray(self.dir, b)
         self.dir = normalize(self.dir)
@@ -93,23 +88,6 @@ class Snake():
 
     def rotate_ray(self, ray, angle):
         return [sin(angle) * ray[1] + cos(angle) * ray[0], cos(angle) * ray[1] - sin(angle) * ray[0]]
-
-    def intersect_circle(self, ray_start, ray_dir, center, radius):
-        ray_end = [x1 + x2 for x1, x2 in zip(ray_start, ray_dir)]
-        dx = ray_end[1] - ray_start[1]
-        dy = ray_end[0] - ray_start[0]
-        dr = sqrt(dx * dx + dy * dy)
-        D = ray_start[1] * ray_end[0] - ray_end[1] * ray_start[0]
-        delta = (radius ** 2) * (dr ** 2) - (D ** 2)
-        if delta < 0:
-            return None
-        else:
-            return [
-                    [((-D * dx) + (abs(dx) * sqrt(delta))) / (dr ** 2), 
-                    ((D * dy) + (sign(dy) * (dx) * sqrt(delta))) / (dr ** 2)],
-                    [((-D * dx) - (abs(dx) * sqrt(delta))) / (dr ** 2), 
-                    ((D * dy) - (sign(dy) * (dx) * sqrt(delta))) / (dr ** 2)],
-                    ]
 
     def intersect_line(self, ray_start, ray_dir, p1, p2):
         ray_start = np.array(ray_start, dtype=np.float)
@@ -133,24 +111,6 @@ class Snake():
             if point == None:
                 continue
             dist = distance(point, ray_start)
-            if dist < min_dist:
-                min_dist = dist
-        return min_dist
-
-    def intersect_circle_array(self, array, radius, ray, ray_start):
-        "deprecated"
-        min_dist = 10000
-        for circle in array:
-            points = self.intersect_circle(ray_start, ray, circle, radius)
-            if points == None:
-                continue
-            [p1, p2] = points
-            if distance(p1, self.chains[0]) > distance(p2, self.chains[0]):
-                p = p2
-            else:
-                p = p1
-            dist = distance(p, self.chains[0])
-            # if ray_cmp([x1 - x2 for x1, x2 in zip(p, self.chains[0])], ray) and dist < min_dist:
             if dist < min_dist:
                 min_dist = dist
         return min_dist
