@@ -4,6 +4,9 @@ from Snake import Snake
 from snake import Dojo
 from SupervisedDojo import SupervisedDojo
 
+def mean(numbers):
+    return float(sum(numbers)) / max(len(numbers), 1)
+
 class TrainedNN:
 
     def __init__(self, model):
@@ -15,16 +18,19 @@ class TrainedNN:
         a = a.tolist()
         return a[0]
 
-
 class TrainedSnake(Snake):
     def __init__(self, y0, x0, color, screen, model):
         super().__init__(y0, x0, color, screen)
         self.nn = TrainedNN(model)
+        tryes = [None] * 100
+        # for i in range(100):
+        #     y = model.predict(numpy.expand_dims(numpy.random.random_sample((48)), axis=0))
+        #     tryes[i] = y[0][0]
+        # self.mean = mean(tryes)
+        # self.max = max(tryes)
 
     # def get_rotation_angle(self, Y):
-    #     print(Y)
-    #     angle = Y[0] - 0.5
-    #     print(angle)
+    #     angle = (Y[0] - self.mean) / (self.max - self.mean)
     #     return angle * 15
 
 class TestDojo(Dojo):
@@ -54,18 +60,15 @@ class TestDojo(Dojo):
                     self.is_game_over = True
                 self.snakes[i] = TrainedSnake(320, 240, (255, 9, 255), self.screen, self.model)
 
-# define base model
 def baseline_model():
     from keras.models import Sequential
     from keras.layers import Dense, Activation
-    # create model
     model = Sequential()
     model.add(Dense(16, input_dim=48, kernel_initializer='normal', activation='relu'))
     model.add(Activation('sigmoid'))
     model.add(Dense(16, kernel_initializer='normal'))
     model.add(Activation('sigmoid'))
     model.add(Dense(2, kernel_initializer='normal'))
-    # Compile model
     model.compile(loss='mean_squared_error', optimizer='adam')
     return model
 
@@ -89,6 +92,8 @@ def train_model(data):
     model.fit(X, Y, epochs=10, batch_size=32)
     results = model.evaluate(X, Y, batch_size=128)
     print("\nres: ", results)
+    for i, x in enumerate(X):
+        print(model.predict(numpy.expand_dims(x, axis=0)), Y[i])
     return model
 
 def main():

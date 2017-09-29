@@ -58,9 +58,9 @@ class SupervisedDojo(Dojo):
 
     def save_io(self):
         angle = -self.player_snake.calc_angle(self.last_player_snake_dir)
+        print(angle, angle / 15)
         angle = angle / 15
         angle_arr = [0.5 + angle, 0.5]
-        print (angle)
         self.data.append([self.player_snake.gen_inputs(self.food_list), angle_arr])
     def display_snake_inputs(self):
         inputs = self.player_snake.gen_inputs(self.food_list)
