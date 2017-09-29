@@ -137,10 +137,6 @@ class Snake():
         return dist_array
 
     def gen_inputs(self, food_list):
-        rays = []
-        for angle in range(-120, 120, 15):
-            angle = (angle / 180) * pi
-            rays.append(self.rotate_ray(self.dir, angle))
         dist_pear = self.calc_objects_distances([x.pos for x in food_list.list])
         dist_gopa = self.calc_objects_distances(self.chains[1:])
         dist_wall = []
@@ -148,6 +144,10 @@ class Snake():
                 [[0,0],[0, 640]],
                 [[0,640],[480, 640]],
                 [[480,0],[480, 640]]]
+        rays = []
+        for i in range(16):
+            angle = ((i * 11.25 - 90) / 180) * pi
+            rays.append(self.rotate_ray(self.dir, angle))
         for ray in rays:
             dist_wall.append(self.intersect_line_array(walls, self.chains[0], ray))
         return [-x + 10000 for x in dist_pear] + dist_gopa + dist_wall

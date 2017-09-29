@@ -8,7 +8,7 @@ from Snake import Snake
 from Food import Food, FoodList
 from Genetics import Genetics
 
-class Dojo:
+class Dojo(object):
     def __init__(self):
         pygame.init()
         self.font = pygame.font.SysFont("monospace", 15)
