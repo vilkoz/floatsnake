@@ -44,9 +44,10 @@ class SupervisedDojo(Dojo):
                     self.KEYS['right'] = 1
                 if event.key == pygame.K_p:
                     self.pause ^= 1
-                if event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_s:
                     with open('data.txt', 'w') as f:
                         f.write(str(self.data) + '\n')
+                if event.key == pygame.K_ESCAPE:
                     pygame.display.quit()
                     pygame.quit()
                     self.running = False
@@ -59,8 +60,8 @@ class SupervisedDojo(Dojo):
     def save_io(self):
         angle = -self.player_snake.calc_angle(self.last_player_snake_dir)
         print(angle, angle / 15)
-        angle = angle / 15
-        angle_arr = [0.5 + angle, 0.5]
+        # angle = angle / 15
+        angle_arr = [1 if angle < 0 else 0, 1 if angle > 0 else 0]
         self.data.append([self.player_snake.gen_inputs(self.food_list), angle_arr])
     def display_snake_inputs(self):
         inputs = self.player_snake.gen_inputs(self.food_list)
