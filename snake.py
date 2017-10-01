@@ -8,14 +8,15 @@ from Snake import Snake
 from Food import Food, FoodList
 from Genetics import Genetics
 
-class Dojo:
+class Dojo(object):
     def __init__(self):
         pygame.init()
         self.font = pygame.font.SysFont("monospace", 15)
         self.screen = pygame.display.set_mode((900,480))
         self.screen.fill((0,0,0))
+        self.snake_num = 10
         self.snakes = []
-        for i in range(10):
+        for i in range(self.snake_num):
             self.snakes.append(Snake(320, 240, (255, 9, 0), self.screen))
         self.genetics = Genetics(self)
         self.food_list = FoodList(self.screen)
@@ -83,13 +84,16 @@ class Dojo:
             self.snakes = []
             self.snakes.append(Snake(320, 240, (255, 9, 255), self.screen))
             self.snakes.append(Snake(320, 240, (255, 9, 0), self.screen, self.genetics.the_best.nn.roll()))
+            self.snakes[-1].mean = self.genetics.the_best.mean
+            self.snakes[-1].amp = self.genetics.the_best.amp
+            self.snakes[-1].values = self.genetics.the_best.values
             self.player_snake = self.snakes[0]
             self.mode = self.modes["Play"]
             self.is_game_over = False
         elif self.mode == self.modes["Play"]:
             self.mode = self.modes["Evolve"]
             self.snakes = []
-            for i in range(10):
+            for i in range(self.snake_num):
                 self.snakes.append(self.genetics.new_best_snake())
             self.genetics.snakes = self.snakes
             self.player_snake = None

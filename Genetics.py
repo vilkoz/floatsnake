@@ -2,6 +2,7 @@
 import struct
 from os import path
 from random import randrange
+from math import isnan
 from Snake import Snake
 
 class Genetics:
@@ -40,6 +41,20 @@ class Genetics:
                 self.second_best = second_best_snake
         return (self.the_best, self.second_best)
 
+    def random_pick_by_points(self):
+        points = [x.points for x in self.snakes]
+        s = sum(points)
+        points = [x / s for x in points]
+        selection = randrange(1000) / 1000
+        p_sum = 0
+        for i, p in enumerate(points):
+            p_sum += p
+            if p_sum >= selection:
+                return self.snakes[i]
+
+    def random_pick_best_snakes(self):
+        return self.random_pick_by_points(), self.random_pick_by_points()
+
     def mutate_byte(self, byte):
         byte_list = list(struct.pack('f', byte))
         ret_list = byte_list.copy()
@@ -52,28 +67,38 @@ class Genetics:
         return struct.unpack('f', bytes(ret_list))
 
     def merge_gens(self, snake1, snake2):
-        parents = (snake1.nn.roll(), snake2.nn.roll()) 
+        parents = [snake1.nn.roll(), snake2.nn.roll()]
         coefs_len = len(parents[0])
         random_places = [randrange(0, coefs_len) for i in range(12)]
         res = []
-        last_i = 0
+        last_i = -1
         cur_parent = 0
         for j in range(len(random_places)):
-            for i in range(last_i, random_places[j]):
+            for i in range(last_i + 1, random_places[j]):
                 byte = self.mutate_byte(parents[cur_parent][i])
+                byte = byte[0]
+                byte = byte if not isnan(byte) else 0.5
                 res.append(byte)
                 last_i = i
             cur_parent ^= 1
-        for i in range(coefs_len):
+        for i in range(last_i + 1, coefs_len):
             res.append(parents[cur_parent][i])
         return res
 
     def new_best_snake(self):
-        parents = self.get_two_best_snakes()
-        if parents[0].points > self.absolute_best_score:
+        # parents = self.get_two_best_snakes()
+        parents = self.random_pick_best_snakes()
+        the_best = self.get_two_best_snakes()[0]
+        if the_best.points > self.absolute_best_score:
             self.save_best_coefs(parents[0])
         new_gene = self.merge_gens(parents[0], parents[1])
-        return Snake(randrange(320 - 200, 320 + 200), randrange(240 - 100, 240 + 100), (255, 0, 0), self.screen, new_gene)
+        return Snake(
+            randrange(320 - 200, 320 + 200),
+            randrange(240 - 100, 240 + 100),
+            (255, 0, 0),
+            self.screen,
+            net_coefs=new_gene
+        )
 
     def update_current_best(self):
         self.cur_best = [x for x in self.snakes if x.points == max([x.points for x in self.snakes])]

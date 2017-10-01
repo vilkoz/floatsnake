@@ -1,7 +1,7 @@
 import sys
 import pygame
 import numpy as np
-from math import cos, sin, pi, sqrt, atan2
+from math import cos, sin, pi, sqrt, atan2, isnan
 from random import randrange
 from NeuralNet import NeuralNet
 
@@ -22,7 +22,7 @@ def mean(numbers):
     return float(sum(numbers)) / max(len(numbers), 1)
 
 class Snake():
-    def __init__(self, y0, x0, color, screen, net_coefs=None):
+    def __init__(self, y0, x0, color, screen, net_coefs=0):
         self.color = color
         self.screen = screen
         rand_x = randrange(-100, 100) / 100
@@ -43,21 +43,28 @@ class Snake():
     def draw(self, color=None, gradient=True):
         tmp_color = color if color else self.color
         for node in self.chains:
-            pygame.draw.circle(self.screen, tmp_color, (int(node[1]), int(node[0])), 10, 0)
+            x = int(node[1] if not isnan(node[1]) else 0)
+            y = int(node[0] if not isnan(node[0]) else 0)
+            pygame.draw.circle(self.screen, tmp_color, (x, y), 10, 0)
             if gradient:
-                tmp_color = tuple([(x + 10) if x < 245 else x for x in tmp_color])
+                tmp_color = tuple([(_ + 10) if _ < 245 else _ for _ in tmp_color])
 
     def move(self):
         prev = None
         for node in self.chains:
             if prev == None:
+                save = node.copy()
                 node[0] += self.speed * self.dir[0]
                 node[1] += self.speed * self.dir[1]
+                if isnan(node[0]) or isnan(node[1]):
+                    node[0], node[1] = save[0], save[1]
+                    print('nan in head node', node, self.dir)
             else:
                 dist = distance(node, prev)
                 if dist > 20:
                     node_speed = dist - 20
                     direction = normalize([x1 - x2 for x1, x2 in zip(prev, node)])
+                    save = node.copy()
                     node[0] += node_speed * direction[0]
                     node[1] += node_speed * direction[1]
             prev = node
@@ -72,8 +79,11 @@ class Snake():
 
     def rotate(self, angle):
         b = ((angle) / 180) * pi
+        save = self.dir.copy()
         self.dir = self.rotate_ray(self.dir, b)
         self.dir = normalize(self.dir)
+        if isnan(self.dir[0]) or isnan(self.dir[1]):
+            self.dir = save
 
     def check_no_health(self):
         pos = self.chains[0]
@@ -87,7 +97,10 @@ class Snake():
         return False
 
     def rotate_ray(self, ray, angle):
-        return [sin(angle) * ray[1] + cos(angle) * ray[0], cos(angle) * ray[1] - sin(angle) * ray[0]]
+        try:
+            return [sin(angle) * ray[1] + cos(angle) * ray[0], cos(angle) * ray[1] - sin(angle) * ray[0]]
+        except ValueError:
+            return ray
 
     def intersect_line(self, ray_start, ray_dir, p1, p2):
         ray_start = np.array(ray_start, dtype=np.float)
@@ -137,10 +150,6 @@ class Snake():
         return dist_array
 
     def gen_inputs(self, food_list):
-        rays = []
-        for angle in range(-120, 120, 15):
-            angle = (angle / 180) * pi
-            rays.append(self.rotate_ray(self.dir, angle))
         dist_pear = self.calc_objects_distances([x.pos for x in food_list.list])
         dist_gopa = self.calc_objects_distances(self.chains[1:])
         dist_wall = []
@@ -148,6 +157,10 @@ class Snake():
                 [[0,0],[0, 640]],
                 [[0,640],[480, 640]],
                 [[480,0],[480, 640]]]
+        rays = []
+        for i in range(16):
+            angle = ((i * 11.25 - 90) / 180) * pi
+            rays.append(self.rotate_ray(self.dir, angle))
         for ray in rays:
             dist_wall.append(self.intersect_line_array(walls, self.chains[0], ray))
         return [-x + 10000 for x in dist_pear] + dist_gopa + dist_wall
