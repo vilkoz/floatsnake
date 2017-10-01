@@ -1,5 +1,6 @@
 #!./snake/bin/python
 import struct
+import numpy as np
 from os import path
 from random import randrange
 from math import isnan
@@ -11,8 +12,9 @@ class Genetics:
         self.snakes = dojo.snakes
         self.screen = dojo.screen
         self.the_best = None
-        self.absolute_best_score = None
+        self.absolute_best_score = 0
         self.absolute_best_coefs = None
+        self.absolute_best_values = None
         self.load_best_coefs()
         self.second_best = None
         self.cur_best = None
@@ -107,22 +109,29 @@ class Genetics:
     def load_best_coefs(self):
         if path.isfile('scores.txt'):
             with open('scores.txt') as f:
-                m = 0
-                m_coefs = []
-                for line in f:
-                    d = eval(line)
-                    if d['points'] > m:
-                        m = d['points']
-                        m_coefs = d['coefs']
-            self.absolute_best_score = m
-            self.absolute_best_coefs = m_coefs
+                d = eval(f.read())
+                if d['points'] > self.absolute_best_score:
+                    m = d['points']
+                    m_coefs = d['coefs']
+                    m_val = d['values']
+                    load_val = []
+                    for v in m_val:
+                        load_val.append(np.array(v))
+                    self.absolute_best_score = m
+                    self.absolute_best_coefs = m_coefs
+                    self.absolute_best_values = load_val
 
     def evole_from_file(self):
         self.load_best_coefs()
         if self.absolute_best_coefs:
             self.the_best = Snake(320, 240, (255, 0, 0), self.screen, self.absolute_best_coefs)
+            self.the_best.points = self.absolute_best_score
+            self.the_best.values = self.absolute_best_values
 
     def save_best_coefs(self, snake):
+        save_values = []
+        for value in snake.values:
+            save_values.append(value.tolist())
         with open('scores.txt', 'w') as f:
-            f.write(str({'points': snake.points, 'coefs': snake.nn.roll()}) + '\n')
+            f.write(str({'points': snake.points, 'coefs': snake.nn.roll(), 'values': save_values}) + '\n')
 
